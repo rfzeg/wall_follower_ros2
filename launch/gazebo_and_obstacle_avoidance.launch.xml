@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Launch file ROS2 -->
+
+<launch>
+
+  <!-- Start a Gazebo simulation -->
+  <include file="$(find-pkg-share rule_based_obstacle_avoidance)/launch/empty_simulation.launch.py"/>
+
+  <!-- Start obstacle avoidance node -->
+  <node name="obstacle_avoidance" pkg="rule_based_obstacle_avoidance" exec="obstacle_avoidance" output="screen">
+    <param name="linear_x_velocity" value="0.3"/>
+    <param name="angular_z_velocity" value="0.3"/>
+  </node>
+
+</launch>

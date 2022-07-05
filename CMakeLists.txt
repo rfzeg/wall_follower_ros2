@@ -32,8 +32,20 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
+# obstacle avoidance
+add_executable(obstacle_avoidance src/obstacle_avoidance.cpp)
+ament_target_dependencies(obstacle_avoidance rclcpp sensor_msgs geometry_msgs)
 
+install(TARGETS
+  obstacle_avoidance
+  DESTINATION lib/${PROJECT_NAME}/
+)
 
+# prevent error message 'file xxx.launch.xml was not found in the share directory of package'
+install(DIRECTORY
+  launch
+  DESTINATION share/${PROJECT_NAME}/
+)
 
 # install package.xml, register the package with the ament index,
 # and install config/target files for CMake so that it can be found by other packages using find_package
