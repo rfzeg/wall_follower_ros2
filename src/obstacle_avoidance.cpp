@@ -19,9 +19,9 @@ public:
     publisher_ =
         this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
 
-    // declare parameters
-    this->declare_parameter("linear_x_velocity", rclcpp::PARAMETER_DOUBLE);
-    this->declare_parameter("angular_z_velocity", rclcpp::PARAMETER_DOUBLE);
+    // declare parameters and set default values
+    this->declare_parameter("linear_x_velocity", 0.3);
+    this->declare_parameter("angular_z_velocity", 0.2);
 
     timer_ = this->create_wall_timer(
         1000ms, std::bind(&ObstacleAvoidance::respond, this));
