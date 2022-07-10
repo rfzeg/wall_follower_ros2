@@ -23,16 +23,15 @@ public:
     this->declare_parameter("linear_x_velocity", 0.3);
     this->declare_parameter("angular_z_velocity", 0.2);
     this->declare_parameter("safety_distance", 5.0);
-
-    timer_ = this->create_wall_timer(
-        1000ms, std::bind(&ObstacleAvoidance::respond, this));
-  }
-  void respond() {
     // get parameters values
     this->get_parameter("linear_x_velocity", linear_x_velocity_);
     this->get_parameter("angular_z_velocity", angular_z_velocity_);
     this->get_parameter("safety_distance", safety_distance_);
+
+    timer_ = this->create_wall_timer(
+        1000ms, std::bind(&ObstacleAvoidance::respond, this));
   }
+  void respond() {}
 
 private:
   rclcpp::TimerBase::SharedPtr timer_;
