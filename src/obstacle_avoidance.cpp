@@ -22,6 +22,7 @@ public:
     // declare parameters and set default values
     this->declare_parameter("linear_x_velocity", 0.3);
     this->declare_parameter("angular_z_velocity", 0.2);
+    this->declare_parameter("safety_distance", 5.0);
 
     timer_ = this->create_wall_timer(
         1000ms, std::bind(&ObstacleAvoidance::respond, this));
@@ -30,12 +31,14 @@ public:
     // get parameters values
     this->get_parameter("linear_x_velocity", linear_x_velocity_);
     this->get_parameter("angular_z_velocity", angular_z_velocity_);
+    this->get_parameter("safety_distance", safety_distance_);
   }
 
 private:
   rclcpp::TimerBase::SharedPtr timer_;
   double linear_x_velocity_;
   double angular_z_velocity_;
+  double safety_distance_;
 
   void topic_callback(const sensor_msgs::msg::LaserScan::SharedPtr _msg) {
     // 200 readings, from right to left, from -57 to 57 degress
@@ -55,7 +58,7 @@ private:
     // logic
     RCLCPP_INFO(this->get_logger(), "Distance is: '%f'", distance);
     // basic rule
-    if (distance < 1) {
+    if (distance < safety_distance_) {
       // turn around
       msg.linear.x = 0;
       msg.angular.z = angular_z_velocity_;
