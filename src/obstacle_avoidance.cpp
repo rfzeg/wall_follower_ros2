@@ -28,6 +28,8 @@ public:
     this->get_parameter("angular_z_velocity", angular_z_velocity_);
     this->get_parameter("safety_distance", safety_distance_);
 
+    RCLCPP_INFO(this->get_logger(), "Obstacle avoidance running");
+
     timer_ = this->create_wall_timer(
         1000ms, std::bind(&ObstacleAvoidance::respond, this));
   }
@@ -55,14 +57,20 @@ private:
   geometry_msgs::msg::Twist calculateVelMsg(float distance) {
     auto msg = geometry_msgs::msg::Twist();
     // logic
-    RCLCPP_INFO(this->get_logger(), "Distance is: '%f'", distance);
+    RCLCPP_DEBUG(this->get_logger(), "Distance reading is: '%f'", distance);
     // basic rule
     if (distance < safety_distance_) {
-      // turn around
+      // turn
+      RCLCPP_DEBUG(this->get_logger(),
+                   "Turning in place with an angular velocity of: '%f'",
+                   angular_z_velocity_);
       msg.linear.x = 0;
       msg.angular.z = angular_z_velocity_;
     } else {
       // go straight ahead
+      RCLCPP_DEBUG(this->get_logger(),
+                   "Moving forward in a straight line with a velocity of: '%f'",
+                   linear_x_velocity_);
       msg.linear.x = linear_x_velocity_;
       msg.angular.z = 0;
     }
