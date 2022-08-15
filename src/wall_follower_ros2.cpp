@@ -1,5 +1,5 @@
 /*
-Rule based obstacle avoidance (ROS2)
+Rule based wall follower (ROS2)
 Author: Roberto Zegers
 Date: August 2022
 */
@@ -14,7 +14,7 @@ using namespace std::chrono_literals;
 
 class ObstacleAvoidance : public rclcpp::Node {
 public:
-  ObstacleAvoidance() : Node("ObstacleAvoidance") {
+  ObstacleAvoidance() : Node("wall_follower_ros2") {
 
     auto default_qos = rclcpp::QoS(rclcpp::SystemDefaultsQoS());
     subscription_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
@@ -32,7 +32,7 @@ public:
     this->get_parameter("angular_z_velocity", angular_z_velocity_);
     this->get_parameter("safety_distance", d);
 
-    RCLCPP_INFO(this->get_logger(), "Obstacle avoidance running");
+    RCLCPP_INFO(this->get_logger(), "Wall follower node running");
 
     timer_ = this->create_wall_timer(
         1000ms, std::bind(&ObstacleAvoidance::respond, this));

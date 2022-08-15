@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(rule_based_obstacle_avoidance)
+project(wall_follower_ros2)
 
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
@@ -33,11 +33,11 @@ if(BUILD_TESTING)
 endif()
 
 # obstacle avoidance
-add_executable(obstacle_avoidance src/obstacle_avoidance.cpp)
-ament_target_dependencies(obstacle_avoidance rclcpp sensor_msgs geometry_msgs)
+add_executable(wall_follower_ros2 src/wall_follower_ros2.cpp)
+ament_target_dependencies(wall_follower_ros2 rclcpp sensor_msgs geometry_msgs)
 
 install(TARGETS
-  obstacle_avoidance
+  wall_follower_ros2
   DESTINATION lib/${PROJECT_NAME}/
 )
 
