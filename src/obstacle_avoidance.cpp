@@ -125,74 +125,142 @@ private:
 
     // logic block 1:
     if (z[0] > d && z[1] > d && z[2] > d && z[3] > d && z[4] > d) {
+      RCLCPP_INFO(this->get_logger(), "Case 1: no obstacles detected");
       drive_state = 0; // find wall: turn CW and move ahead
     } else if (z[0] > d && z[1] > d && z[2] < d && z[3] > d && z[4] > d) {
+      RCLCPP_INFO(this->get_logger(), "Case 2: obstacle only in front zone");
       drive_state = 1; // turn left
     } else if (z[0] > d && z[1] < d && z[2] > d && z[3] > d && z[4] > d) {
+      RCLCPP_INFO(this->get_logger(),
+                  "Case 3: obstacle only in front-right zone");
       drive_state = 1; // turn left
     } else if (z[0] > d && z[1] > d && z[2] > d && z[3] < d && z[4] > d) {
+      RCLCPP_INFO(this->get_logger(),
+                  "Case 4: obstacle only in front-left zone");
       drive_state = 0; // find wall: turn CW and move ahead
     } else if (z[0] > d && z[1] < d && z[2] < d && z[3] > d && z[4] > d) {
+      RCLCPP_INFO(this->get_logger(),
+                  "Case 5: obstacle in front-right and front zone");
       drive_state = 1; // turn left
     } else if (z[0] > d && z[1] > d && z[2] < d && z[3] < d && z[4] > d) {
+      RCLCPP_INFO(this->get_logger(),
+                  "Case 6: obstacle in front and front-left zone");
       drive_state = 1; // turn left
     } else if (z[0] > d && z[1] < d && z[2] < d && z[3] < d && z[4] > d) {
+      RCLCPP_INFO(this->get_logger(),
+                  "Case 7: obstacle in front-right, front and front-left zone");
       drive_state = 1; // turn left
     } else if (z[0] > d && z[1] < d && z[2] > d && z[3] < d && z[4] > d) {
+      RCLCPP_INFO(this->get_logger(),
+                  "Case 8: obstacle in front-right and front-left zone");
       drive_state = 3; // move slow straight ahead
     }
     // logic block 2:
     else if (z[0] < d && z[1] > d && z[2] > d && z[3] > d && z[4] > d) {
+      RCLCPP_INFO(this->get_logger(), "Case 9:  obstacle only in right zone");
       drive_state = 2; // follow the wall: keep moving straight ahead
     } else if (z[0] < d && z[1] > d && z[2] < d && z[3] > d && z[4] > d) {
+      RCLCPP_INFO(this->get_logger(),
+                  "Case 10:  obstacle in right and front zone");
       drive_state = 1; // turn left
     } else if (z[0] < d && z[1] < d && z[2] > d && z[3] > d && z[4] > d) {
+      RCLCPP_INFO(this->get_logger(),
+                  "Case 11: obstacle in right and front-right zone");
       drive_state = 1; // turn left
     } else if (z[0] < d && z[1] > d && z[2] > d && z[3] < d && z[4] > d) {
+      RCLCPP_INFO(this->get_logger(),
+                  "Case 12: obstacle in right and front-left zone");
       drive_state = 3; // move slow straight ahead
     } else if (z[0] < d && z[1] < d && z[2] < d && z[3] > d && z[4] > d) {
+      RCLCPP_INFO(this->get_logger(),
+                  "Case 13: obstacle in right, front-right and front zone");
       drive_state = 1; // turn left
     } else if (z[0] < d && z[1] > d && z[2] < d && z[3] < d && z[4] > d) {
+      RCLCPP_INFO(this->get_logger(),
+                  "Case 14: obstacle in right, front and front-left zone");
       drive_state = 1; // turn left
     } else if (z[0] < d && z[1] < d && z[2] < d && z[3] < d && z[4] > d) {
+      RCLCPP_INFO(
+          this->get_logger(),
+          "Case 15: obst. in right, front-right, front and front-left zone");
       drive_state = 1; // turn left
     } else if (z[0] < d && z[1] < d && z[2] > d && z[3] < d && z[4] > d) {
+      RCLCPP_INFO(
+          this->get_logger(),
+          "Case 16: obstacle in right, front-right and front-left zone");
       drive_state = 3; // move slow straight ahead
     }
     // logic block 3:
     else if (z[0] > d && z[1] > d && z[2] > d && z[3] > d && z[4] < d) {
+      RCLCPP_INFO(this->get_logger(), "Case 17: obstacle only in left zone");
       drive_state = 0; // find wall: turn CW and move ahead
     } else if (z[0] > d && z[1] > d && z[2] < d && z[3] > d && z[4] < d) {
+      RCLCPP_INFO(this->get_logger(),
+                  "Case 18: obstacle in front and left zone");
       drive_state = 0; // find wall: turn CW and move ahead
     } else if (z[0] > d && z[1] < d && z[2] > d && z[3] > d && z[4] < d) {
+      RCLCPP_INFO(this->get_logger(),
+                  "Case 19: obstacle in front-right and left zone");
       drive_state = 3; // move slow straight ahead
     } else if (z[0] > d && z[1] > d && z[2] > d && z[3] < d && z[4] < d) {
+      RCLCPP_INFO(this->get_logger(),
+                  "Case 20: obstacle in front-left and left zone");
       drive_state = 0; // find wall: turn CW and move ahead
     } else if (z[0] > d && z[1] < d && z[2] < d && z[3] > d && z[4] < d) {
+      RCLCPP_INFO(this->get_logger(),
+                  "Case 21: obstacle in front-right, front and left zone");
       drive_state = 0; // find wall: turn CW and move ahead
     } else if (z[0] > d && z[1] > d && z[2] < d && z[3] < d && z[4] < d) {
+      RCLCPP_INFO(this->get_logger(),
+                  "Case 22: obstacle in front, front-left and left zone");
       drive_state = 1; // turn left
     } else if (z[0] > d && z[1] < d && z[2] < d && z[3] < d && z[4] < d) {
+      RCLCPP_INFO(
+          this->get_logger(),
+          "Case 23: obst. in front-right, front, front-left and left zone");
       drive_state = 1; // turn left
     } else if (z[0] > d && z[1] < d && z[2] > d && z[3] < d && z[4] < d) {
+      RCLCPP_INFO(this->get_logger(),
+                  "Case 24: obstacle in front-right, front-left and left zone");
       drive_state = 3; // move slow straight ahead
     }
     // logic block 4:
     else if (z[0] < d && z[1] > d && z[2] > d && z[3] > d && z[4] < d) {
+      RCLCPP_INFO(this->get_logger(),
+                  "Case 25: obstacle in right and left zone");
       drive_state = 3; // move slow straight ahead
     } else if (z[0] < d && z[1] > d && z[2] < d && z[3] > d && z[4] < d) {
+      RCLCPP_INFO(this->get_logger(),
+                  "Case 26: obstacle in right, front and left zone");
       drive_state = 1; // turn left
     } else if (z[0] < d && z[1] < d && z[2] > d && z[3] > d && z[4] < d) {
+      RCLCPP_INFO(this->get_logger(),
+                  "Case 27: obstacle in right, front-right and left zone");
       drive_state = 1; // turn left
     } else if (z[0] < d && z[1] > d && z[2] > d && z[3] < d && z[4] < d) {
+      RCLCPP_INFO(this->get_logger(),
+                  "Case 28: obstacle in right, front-left and left zone");
       drive_state = 0; // find wall: turn CW and move ahead
     } else if (z[0] < d && z[1] < d && z[2] < d && z[3] > d && z[4] < d) {
+      RCLCPP_INFO(
+          this->get_logger(),
+          "Case 29: obstacle in right, front-right, front and left zone");
       drive_state = 1; // turn left
     } else if (z[0] < d && z[1] > d && z[2] < d && z[3] < d && z[4] < d) {
+      RCLCPP_INFO(
+          this->get_logger(),
+          "Case 30: obstacle in right, front, front-left, and left zone");
       drive_state = 0; // find wall: turn CW and move ahead
     } else if (z[0] < d && z[1] < d && z[2] < d && z[3] < d && z[4] < d) {
+      RCLCPP_INFO(
+          this->get_logger(),
+          "Case 31: obst. in right, front-right, front, front-left and left "
+          "zone");
       drive_state = 4; // reverse turning left
     } else if (z[0] < d && z[1] < d && z[2] > d && z[3] < d && z[4] < d) {
+      RCLCPP_INFO(
+          this->get_logger(),
+          "Case 32: obst. in right, front-right, front-left and left zone");
       drive_state = 3; // move slow straight ahead
     } else {
       RCLCPP_INFO(this->get_logger(), "Unknown case");
@@ -203,33 +271,55 @@ private:
   Define velocity command based on state and fill in a Twist message
   */
   void set_velocity() {
+    RCLCPP_DEBUG(this->get_logger(), "Wall follower drive_state: [%d]",
+                 drive_state);
     switch (drive_state) {
     case 0:
       // Find a wall: turn CW (right) while moving ahead
+      RCLCPP_DEBUG(this->get_logger(),
+                   "Turn right while moving forward. Linear velocity on x "
+                   "axis: '%f'. Angular velocity on z axis: '%f'.",
+                   linear_x_velocity_, -angular_z_velocity_);
       vel_command.linear.x = linear_x_velocity_;
       vel_command.angular.z = -angular_z_velocity_;
       break;
 
     case 1:
       // Turn left
+      RCLCPP_DEBUG(
+          this->get_logger(),
+          "Turning in place with an angular velocity on z axis of: '%f'",
+          angular_z_velocity_);
       vel_command.linear.x = 0.0;
       vel_command.angular.z = angular_z_velocity_;
       break;
 
     case 2:
       // Follow the wall: keep moving straight ahead
+      RCLCPP_DEBUG(this->get_logger(),
+                   "Moving forward in a straight line with a velocity on x "
+                   "axis of: '%f'",
+                   linear_x_velocity_);
       vel_command.linear.x = linear_x_velocity_;
       vel_command.angular.z = 0.0;
       break;
 
     case 3:
       // Move slow straight ahead
+      RCLCPP_DEBUG(this->get_logger(),
+                   "Moving slowly forward in a straight line with a velocity "
+                   "on x axis of: '%f'",
+                   linear_x_velocity_ / 2);
       vel_command.linear.x = linear_x_velocity_ / 2;
       vel_command.angular.z = 0.0;
       break;
 
     case 4:
       // Reverse turning left
+      RCLCPP_DEBUG(this->get_logger(),
+                   "Reverse turning left. Linear velocity on x axis: '%f'. "
+                   "Angular velocity on z axis: '%f'.",
+                   -linear_x_velocity_, angular_z_velocity_);
       vel_command.linear.x = -linear_x_velocity_;
       vel_command.angular.z = angular_z_velocity_;
       break;
