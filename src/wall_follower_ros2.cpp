@@ -48,18 +48,18 @@ private:
   double d;
   // the minimum distance value on each zone (assuming 5 zones)
   float z[5];
+  // array to keep track of the index that corresponds to the min. distance
+  // value on each zone
+  int indices[5];
   // how the robot should move based on the obstacles around it
   int drive_logic_state;
-  // the latest laser measurements
-  std::vector<float> laser_rays;
 
   void
   laser_callback(const sensor_msgs::msg::LaserScan::SharedPtr _callback_msg) {
-    laser_rays = _callback_msg->ranges;
     // the total number of laser rays the laser range finder has
-    size_t range_size = laser_rays.size();
+    size_t range_size = _callback_msg->ranges.size();
     // the number of laser rays that one laser range zone has (assuming 5 zones)
-    size_t zone_size = static_cast<int>(range_size / 5);
+    // size_t zone_size = static_cast<int>(range_size / 5);
 
     RCLCPP_INFO_ONCE(this->get_logger(), "Number of laser rays: [%zu]",
                      range_size);
@@ -71,46 +71,77 @@ private:
     z[4] = _callback_msg->range_max;
 
     // cycle trough all laser range rays
-    for (size_t i = 0; i < range_size; i++) {
-
-      // rays < 144, laser rays to the far right side
-      if (i < zone_size) {
-        // get the smallest (closest) laser range value
-        if (laser_rays[i] < z[0]) {
-          z[0] = laser_rays[i];
+    // to determine the state of the environment surroundings
+    for (auto i = 0u; i < _callback_msg->ranges.size(); ++i) {
+      // laser rays to the far right side
+      if (i < static_cast<unsigned>(_callback_msg->ranges.size() / 5)) {
+        // get the distance reading to the closest object in the given zone
+        if (_callback_msg->ranges[i] < z[0]) {
+          z[0] = _callback_msg->ranges[i];
+          indices[0] = i;
         }
       }
-      // rays >= 144 and rays < 288, laser rays to the front-right side
-      else if (i >= zone_size && i < zone_size * 2) {
-        // get the smallest (closest) laser range value
-        if (laser_rays[i] < z[1]) {
-          z[1] = laser_rays[i];
+      // laser rays to the front-right side
+      else if (i >= static_cast<unsigned>(_callback_msg->ranges.size() / 5) &&
+               i < static_cast<unsigned>(_callback_msg->ranges.size() * 2 /
+                                         5)) {
+        // get the distance reading to the closest object in the given zone
+        if (_callback_msg->ranges[i] < z[1]) {
+          z[1] = _callback_msg->ranges[i];
+          indices[1] = i;
         }
       }
-      // rays >= 288 and rays < 432, laser rays to the front
-      else if (i >= zone_size * 2 && i < zone_size * 3) {
-        // get the smallest (closest) laser range value
-        if (laser_rays[i] < z[2]) {
-          z[2] = laser_rays[i];
+      // laser rays to the front
+      else if (i >= static_cast<unsigned>(_callback_msg->ranges.size() * 2 /
+                                          5) &&
+               i < static_cast<unsigned>(_callback_msg->ranges.size() * 3 /
+                                         5)) {
+        // get the distance reading to the closest object in the given zone
+        if (_callback_msg->ranges[i] < z[2]) {
+          z[2] = _callback_msg->ranges[i];
+          indices[2] = i;
         }
       }
-      // rays >= 432 and rays < 576, laser rays to the front-left side
-      else if (i >= zone_size * 3 && i < zone_size * 4) {
-        // get the smallest (closest) laser range value
-        if (laser_rays[i] < z[3]) {
-          z[3] = laser_rays[i];
+      // laser rays to the front-left side
+      else if (i >= static_cast<unsigned>(_callback_msg->ranges.size() * 3 /
+                                          5) &&
+               i < static_cast<unsigned>(_callback_msg->ranges.size() * 4 /
+                                         5)) {
+        // get the distance reading to the closest object in the given zone
+        if (_callback_msg->ranges[i] < z[3]) {
+          z[3] = _callback_msg->ranges[i];
+          indices[3] = i;
         }
       }
-      // rays > 576 and rays <= 720, laser rays to the far left side
-      else if (i >= zone_size * 4 && i <= range_size) {
-        // get the smallest (closest) laser range value
-        if (laser_rays[i] < z[4]) {
-          z[4] = laser_rays[i];
+      // laser rays to the far left side
+      else if (i >= static_cast<unsigned>(_callback_msg->ranges.size() * 4 /
+                                          5) &&
+               i <= static_cast<unsigned>(_callback_msg->ranges.size())) {
+        // get the distance reading to the closest object in the given zone
+        if (_callback_msg->ranges[i] < z[4]) {
+          z[4] = _callback_msg->ranges[i];
+          indices[4] = i;
         }
       } else {
         RCLCPP_ERROR(this->get_logger(), "Ray index not found in range size");
       }
-    }
+    } // end of for
+    RCLCPP_DEBUG(this->get_logger(),
+                 "Closest object to the far right: [%f], index: [%d] ", z[0],
+                 indices[0]);
+    RCLCPP_DEBUG(this->get_logger(),
+                 "Closest object to the front-right: [%f], index: [%d]  ", z[1],
+                 indices[1]);
+    RCLCPP_DEBUG(this->get_logger(),
+                 "Closest object to the front: [%f], index: [%d]  ", z[2],
+                 indices[2]);
+    RCLCPP_DEBUG(this->get_logger(),
+                 "Closest object to the front-left: [%f], index: [%d]  ", z[3],
+                 indices[3]);
+    RCLCPP_DEBUG(this->get_logger(),
+                 "Closest object to the far left: [%f], index: [%d]  ", z[4],
+                 indices[4]);
+
     // determine the movement state to drive the robot
     set_drive_logic_state();
     determine_vel_msg();
