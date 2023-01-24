@@ -113,8 +113,8 @@ private:
     }
     // determine the movement state to drive the robot
     set_drive_state();
-    set_velocity();
-    publisher_->publish(vel_command);
+    determine_vel_msg();
+    publisher_->publish(vel_msg);
   }
 
   /*
@@ -270,63 +270,60 @@ private:
   /*
   Define velocity command based on state and fill in a Twist message
   */
-  void set_velocity() {
+  void determine_vel_msg() {
     RCLCPP_DEBUG(this->get_logger(), "Wall follower drive_state: [%d]",
                  drive_state);
     switch (drive_state) {
     case 0:
-      // Find a wall: turn CW (right) while moving ahead
+      // move straight ahead: No obstacle detected
+      vel_msg.linear.x = linear_x_velocity_;
+      vel_msg.angular.z = 0.0;
       RCLCPP_DEBUG(this->get_logger(),
-                   "Turn right while moving forward. Linear velocity on x "
-                   "axis: '%f'. Angular velocity on z axis: '%f'.",
-                   linear_x_velocity_, -angular_z_velocity_);
-      vel_command.linear.x = linear_x_velocity_;
-      vel_command.angular.z = -angular_z_velocity_;
+                   "Behaviour 0: Moving straight ahead, no obstacle detected.");
       break;
 
     case 1:
-      // Turn left
-      RCLCPP_DEBUG(
-          this->get_logger(),
-          "Turning in place with an angular velocity on z axis of: '%f'",
-          angular_z_velocity_);
-      vel_command.linear.x = 0.0;
-      vel_command.angular.z = angular_z_velocity_;
+      // Turn left: obstacle in front-right and/or front and/or front-left zone
+      vel_msg.linear.x = 0.0;
+      vel_msg.angular.z = angular_z_velocity_;
+      RCLCPP_DEBUG(this->get_logger(),
+                   "Behaviour 1: Turn left, obstacle in front-right and/or "
+                   "front and/or front-left zone.");
+
       break;
 
     case 2:
-      // Follow the wall: keep moving straight ahead
-      RCLCPP_DEBUG(this->get_logger(),
-                   "Moving forward in a straight line with a velocity on x "
-                   "axis of: '%f'",
-                   linear_x_velocity_);
-      vel_command.linear.x = linear_x_velocity_;
-      vel_command.angular.z = 0.0;
+      // Keep moving straight ahead: obstacle only in right zone
+      vel_msg.linear.x = linear_x_velocity_;
+      vel_msg.angular.z = 0.0;
+      RCLCPP_DEBUG(this->get_logger(), "Behaviour 2: Keep moving straight "
+                                       "ahead, obstacle only in right zone");
       break;
 
     case 3:
-      // Move slow straight ahead
-      RCLCPP_DEBUG(this->get_logger(),
-                   "Moving slowly forward in a straight line with a velocity "
-                   "on x axis of: '%f'",
-                   linear_x_velocity_ / 2);
-      vel_command.linear.x = linear_x_velocity_ / 2;
-      vel_command.angular.z = 0.0;
+      // move slow straight ahead: obstacle in front-right or right and
+      // front-left or left zone but not in front
+      vel_msg.linear.x = linear_x_velocity_;
+      vel_msg.angular.z = 0.0;
+      RCLCPP_DEBUG(
+          this->get_logger(),
+          "Behaviour 3: Keep moving straight ahead, obstacle in front-right or "
+          "right and front-left or left zone but not in front");
       break;
 
     case 4:
-      // Reverse turning left
+      // Reverse turning left: obst. in right, front-right, front, front-left
+      // and left zone
+      vel_msg.linear.x = -linear_x_velocity_;
+      vel_msg.angular.z = angular_z_velocity_;
       RCLCPP_DEBUG(this->get_logger(),
-                   "Reverse turning left. Linear velocity on x axis: '%f'. "
-                   "Angular velocity on z axis: '%f'.",
-                   -linear_x_velocity_, angular_z_velocity_);
-      vel_command.linear.x = -linear_x_velocity_;
-      vel_command.angular.z = angular_z_velocity_;
+                   "Behaviour 4: Reverse turning left, obst. in right, "
+                   "front-right, front, front-left and left zone");
       break;
     }
   }
 
-  geometry_msgs::msg::Twist vel_command;
+  geometry_msgs::msg::Twist vel_msg;
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr publisher_;
   rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr subscription_;
 };
