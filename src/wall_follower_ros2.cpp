@@ -20,7 +20,7 @@ public:
     subscription_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
         "laser_scan", default_qos,
         std::bind(&ObstacleAvoidance::laser_callback, this, _1));
-    publisher_ =
+    vel_msg_publisher_ =
         this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
 
     // declare parameters and set default values
@@ -35,9 +35,8 @@ public:
     RCLCPP_INFO(this->get_logger(), "Wall follower node running");
 
     timer_ = this->create_wall_timer(
-        1000ms, std::bind(&ObstacleAvoidance::respond, this));
+        100ms, std::bind(&ObstacleAvoidance::timerCallback, this));
   }
-  void respond() {}
 
 private:
   rclcpp::TimerBase::SharedPtr timer_;
@@ -53,12 +52,29 @@ private:
   int indices[5];
   // how the robot should move based on the obstacles around it
   int drive_logic_state;
+  // boolean flag to prevent driving without laser scanner data received
+  bool readings_received = false;
+
+  void timerCallback() {
+    if (readings_received == false) {
+      // return early and skip the rest of the function
+      return;
+    } else { // define logic used to drive the robot
+      // determine the movement state to drive the robot
+      set_drive_logic_state();
+      // fill in velocity message
+      determine_vel_msg();
+      // publish velocity message to the robot
+      vel_msg_publisher_->publish(vel_msg);
+    }
+  }
 
   void
   laser_callback(const sensor_msgs::msg::LaserScan::SharedPtr _callback_msg) {
+    readings_received = true;
     // the total number of laser rays the laser range finder has
     size_t range_size = _callback_msg->ranges.size();
-    // the number of laser rays that one laser range zone has (assuming 5 zones)
+    // number of laser rays per laser range zone (assuming 5 zones)
     // size_t zone_size = static_cast<int>(range_size / 5);
 
     RCLCPP_INFO_ONCE(this->get_logger(), "Number of laser rays: [%zu]",
@@ -141,11 +157,6 @@ private:
     RCLCPP_DEBUG(this->get_logger(),
                  "Closest object to the far left: [%f], index: [%d]  ", z[4],
                  indices[4]);
-
-    // determine the movement state to drive the robot
-    set_drive_logic_state();
-    determine_vel_msg();
-    publisher_->publish(vel_msg);
   }
 
   /*
@@ -357,7 +368,7 @@ private:
   }
 
   geometry_msgs::msg::Twist vel_msg;
-  rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr publisher_;
+  rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr vel_msg_publisher_;
   rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr subscription_;
 };
 
