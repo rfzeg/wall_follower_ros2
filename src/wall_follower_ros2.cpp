@@ -9,6 +9,9 @@ Date: August 2022
 #include "sensor_msgs/msg/laser_scan.hpp"
 #include <chrono>
 
+#include <algorithm>
+#include <iterator>
+
 using std::placeholders::_1;
 using namespace std::chrono_literals;
 
@@ -27,10 +30,13 @@ public:
     this->declare_parameter("linear_x_velocity", 0.3);
     this->declare_parameter("angular_z_velocity", 0.2);
     this->declare_parameter("safety_distance", 5.0);
+    this->declare_parameter("reverse_ranges_array", true);
+
     // get parameters values
     this->get_parameter("linear_x_velocity", linear_x_velocity_);
     this->get_parameter("angular_z_velocity", angular_z_velocity_);
     this->get_parameter("safety_distance", d);
+    this->get_parameter("reverse_ranges_array", reverse_ranges_array);
 
     RCLCPP_INFO(this->get_logger(), "Wall follower node running");
 
@@ -44,6 +50,9 @@ private:
   rclcpp::TimerBase::SharedPtr timer_;
   double linear_x_velocity_;
   double angular_z_velocity_;
+  // reverse ranges array if it is populated from left, positive angles, to
+  // right, negative angles, wrt laser sensor.
+  bool reverse_ranges_array;
   // if distance (m) reading is below the 'd' parameter value
   // a region is considered as blocked by an obstacle
   double d;
@@ -142,6 +151,13 @@ private:
         RCLCPP_ERROR(this->get_logger(), "Ray index not found in range size");
       }
     } // end of for
+
+    // this is just for the case the ranges array starts with angles at the left
+    // side wrt to laser scanner
+    if (reverse_ranges_array) {
+      std::reverse(std::begin(z), std::end(z));
+    }
+
     RCLCPP_DEBUG(this->get_logger(),
                  "Closest object to the far right: [%f], index: [%d] ", z[0],
                  indices[0]);
