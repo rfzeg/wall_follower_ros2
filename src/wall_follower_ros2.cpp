@@ -18,7 +18,7 @@ public:
 
     auto default_qos = rclcpp::QoS(rclcpp::SystemDefaultsQoS());
     subscription_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
-        "laser_scan", default_qos,
+        "scan", default_qos,
         std::bind(&ObstacleAvoidance::laser_callback, this, _1));
     vel_msg_publisher_ =
         this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
@@ -38,14 +38,16 @@ public:
         100ms, std::bind(&ObstacleAvoidance::timerCallback, this));
   }
 
+  ~ObstacleAvoidance() {}
+
 private:
   rclcpp::TimerBase::SharedPtr timer_;
   double linear_x_velocity_;
   double angular_z_velocity_;
-  // if distance (mt) reading is below this value
+  // if distance (m) reading is below the 'd' parameter value
   // a region is considered as blocked by an obstacle
   double d;
-  // the minimum distance value on each zone (assuming 5 zones)
+  // current minimum distance value on each zone (assuming 5 zones)
   float z[5];
   // array to keep track of the index that corresponds to the min. distance
   // value on each zone
@@ -54,6 +56,10 @@ private:
   int drive_logic_state;
   // boolean flag to prevent driving without laser scanner data received
   bool readings_received = false;
+
+  rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr vel_msg_publisher_;
+  rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr subscription_;
+  geometry_msgs::msg::Twist vel_msg;
 
   void timerCallback() {
     if (readings_received == false) {
@@ -69,73 +75,67 @@ private:
     }
   }
 
-  void
-  laser_callback(const sensor_msgs::msg::LaserScan::SharedPtr _callback_msg) {
+  void laser_callback(const sensor_msgs::msg::LaserScan::SharedPtr _scan_msg) {
     readings_received = true;
     // the total number of laser rays the laser range finder has
-    size_t range_size = _callback_msg->ranges.size();
+    size_t range_size = _scan_msg->ranges.size();
     // number of laser rays per laser range zone (assuming 5 zones)
     // size_t zone_size = static_cast<int>(range_size / 5);
 
     RCLCPP_INFO_ONCE(this->get_logger(), "Number of laser rays: [%zu]",
                      range_size);
-    // initilize all zones to the maximum range value [m]
-    z[0] = _callback_msg->range_max;
-    z[1] = _callback_msg->range_max;
-    z[2] = _callback_msg->range_max;
-    z[3] = _callback_msg->range_max;
-    z[4] = _callback_msg->range_max;
+
+    // initialize distance values on each zone to max laser scanner range
+    z[0] = _scan_msg->range_max;
+    z[1] = _scan_msg->range_max;
+    z[2] = _scan_msg->range_max;
+    z[3] = _scan_msg->range_max;
+    z[4] = _scan_msg->range_max;
 
     // cycle trough all laser range rays
     // to determine the state of the environment surroundings
-    for (auto i = 0u; i < _callback_msg->ranges.size(); ++i) {
+    for (auto i = 0u; i < _scan_msg->ranges.size(); ++i) {
       // laser rays to the far right side
-      if (i < static_cast<unsigned>(_callback_msg->ranges.size() / 5)) {
+      if (i < static_cast<unsigned>(_scan_msg->ranges.size() / 5)) {
         // get the distance reading to the closest object in the given zone
-        if (_callback_msg->ranges[i] < z[0]) {
-          z[0] = _callback_msg->ranges[i];
+        if (_scan_msg->ranges[i] < z[0]) {
+          z[0] = _scan_msg->ranges[i];
           indices[0] = i;
         }
       }
       // laser rays to the front-right side
-      else if (i >= static_cast<unsigned>(_callback_msg->ranges.size() / 5) &&
-               i < static_cast<unsigned>(_callback_msg->ranges.size() * 2 /
-                                         5)) {
+      else if (i >= static_cast<unsigned>(_scan_msg->ranges.size() / 5) &&
+               i < static_cast<unsigned>(_scan_msg->ranges.size() * 2 / 5)) {
         // get the distance reading to the closest object in the given zone
-        if (_callback_msg->ranges[i] < z[1]) {
-          z[1] = _callback_msg->ranges[i];
+        if (_scan_msg->ranges[i] < z[1]) {
+          z[1] = _scan_msg->ranges[i];
           indices[1] = i;
         }
       }
       // laser rays to the front
-      else if (i >= static_cast<unsigned>(_callback_msg->ranges.size() * 2 /
-                                          5) &&
-               i < static_cast<unsigned>(_callback_msg->ranges.size() * 3 /
-                                         5)) {
+      else if (i >= static_cast<unsigned>(_scan_msg->ranges.size() * 2 / 5) &&
+               i < static_cast<unsigned>(_scan_msg->ranges.size() * 3 / 5)) {
         // get the distance reading to the closest object in the given zone
-        if (_callback_msg->ranges[i] < z[2]) {
-          z[2] = _callback_msg->ranges[i];
+        if (_scan_msg->ranges[i] < z[2]) {
+          z[2] = _scan_msg->ranges[i];
           indices[2] = i;
         }
       }
       // laser rays to the front-left side
-      else if (i >= static_cast<unsigned>(_callback_msg->ranges.size() * 3 /
-                                          5) &&
-               i < static_cast<unsigned>(_callback_msg->ranges.size() * 4 /
-                                         5)) {
+      else if (i >= static_cast<unsigned>(_scan_msg->ranges.size() * 3 / 5) &&
+               i < static_cast<unsigned>(_scan_msg->ranges.size() * 4 / 5)) {
         // get the distance reading to the closest object in the given zone
-        if (_callback_msg->ranges[i] < z[3]) {
-          z[3] = _callback_msg->ranges[i];
+        if (_scan_msg->ranges[i] < z[3]) {
+          z[3] = _scan_msg->ranges[i];
           indices[3] = i;
         }
       }
       // laser rays to the far left side
-      else if (i >= static_cast<unsigned>(_callback_msg->ranges.size() * 4 /
-                                          5) &&
-               i <= static_cast<unsigned>(_callback_msg->ranges.size())) {
+      else if (i >= static_cast<unsigned>(_scan_msg->ranges.size() * 4 / 5) &&
+               i <= static_cast<unsigned>(_scan_msg->ranges.size())) {
         // get the distance reading to the closest object in the given zone
-        if (_callback_msg->ranges[i] < z[4]) {
-          z[4] = _callback_msg->ranges[i];
+        if (_scan_msg->ranges[i] < z[4]) {
+          z[4] = _scan_msg->ranges[i];
           indices[4] = i;
         }
       } else {
@@ -162,6 +162,7 @@ private:
   /*
   Logic used to drive the robot (using 5 zones)
   it depends on the state of the environment surroundings
+  To-do: evaluate zones as 'with obstacle' or 'without obstacle' only once
   */
   void set_drive_logic_state() {
     // logic block 1:
@@ -327,7 +328,7 @@ private:
       break;
 
     case 1:
-      // Turn left: obstacle in front-right and/or front and/or front-left zone
+      // Turn left: obstacle in front-right and/or front and/or front-left
       vel_msg.linear.x = 0.0;
       vel_msg.angular.z = angular_z_velocity_;
       RCLCPP_DEBUG(this->get_logger(),
@@ -366,10 +367,6 @@ private:
       break;
     }
   }
-
-  geometry_msgs::msg::Twist vel_msg;
-  rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr vel_msg_publisher_;
-  rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr subscription_;
 };
 
 int main(int argc, char *argv[]) {
