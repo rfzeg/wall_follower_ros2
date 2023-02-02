@@ -46,6 +46,12 @@ public:
 
   ~ObstacleAvoidance() {}
 
+  void sigint() {
+    // stop the robot on shutdown
+    geometry_msgs::msg::Twist zero_vel_msg;
+    vel_msg_publisher_->publish(zero_vel_msg);
+  }
+
 private:
   rclcpp::TimerBase::SharedPtr timer_;
   double linear_x_velocity_;
@@ -385,9 +391,22 @@ private:
   }
 };
 
+namespace {
+std::function<void(int)> sigint_handler;
+void signal_handler(int signal) { sigint_handler(signal); }
+} // namespace
+
 int main(int argc, char *argv[]) {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<ObstacleAvoidance>());
+  auto obst_avoidance = std::make_shared<ObstacleAvoidance>();
+  std::signal(SIGINT, signal_handler);
+  sigint_handler = [obst_avoidance](int signal) {
+    std::cout << "received signal " << signal << std::endl;
+    obst_avoidance->sigint();
+    rclcpp::shutdown();
+    exit(signal);
+  };
+  rclcpp::spin(obst_avoidance);
   rclcpp::shutdown();
   return 0;
 }
