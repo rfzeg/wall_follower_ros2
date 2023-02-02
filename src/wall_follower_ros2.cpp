@@ -29,7 +29,7 @@ public:
     // declare parameters and set default values
     this->declare_parameter("linear_x_velocity", 0.3);
     this->declare_parameter("angular_z_velocity", 0.2);
-    this->declare_parameter("safety_distance", 5.0);
+    this->declare_parameter("safety_distance", 0.5);
     this->declare_parameter("reverse_ranges_array", true);
 
     // get parameters values
